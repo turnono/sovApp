@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { RouteComponentProps } from "@reach/router";
 import { gql, useQuery } from "@apollo/client";
 import { Header, Button, Loading } from "../components";
@@ -7,6 +7,7 @@ import { css } from "react-emotion";
 import { Modal, ModalTransition, useModal } from "react-simple-hook-modal";
 import "react-simple-hook-modal/dist/styles.css";
 import Joke from "./joke";
+import { store } from "../store";
 
 export const GET_CATEGORIES = gql`
   query GetCategoryList {
@@ -18,10 +19,13 @@ interface CategoriesProps extends RouteComponentProps {}
 
 const Categories: React.FC<CategoriesProps> = () => {
   const { isModalOpen, openModal, closeModal } = useModal();
-  const [selectedCat, setSelectedCat] = useState("");
   const { data, loading, error } = useQuery<
     GetCategoryListTypes.GetCategoryList
   >(GET_CATEGORIES);
+
+  useMemo(() => store.dispatch({ type: "SET_CATEGORIES", payload: data }), [
+    data,
+  ]);
 
   if (loading) return <Loading />;
   if (error) return <p>ERROR</p>;
@@ -32,21 +36,37 @@ const Categories: React.FC<CategoriesProps> = () => {
     : [];
 
   const openM = (category: string) => {
-    setSelectedCat(category);
+    store.dispatch({ type: "SET_CURRENT_CATEGORY", payload: category });
     openModal();
   };
+
+  const closeM = () => {
+    closeModal();
+    setTimeout(() => {
+      store.dispatch({ type: "REMOVE_CURRENT_CATEGORY" });
+      store.dispatch({ type: "REMOVE_JOKE" });
+    }, 50);
+  };
+
+  const closeButtonClass = css`
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    color: white;
+    background-color: red;
+  `;
+
+  const gridClass = css`
+    display: grid;
+    grid-template-columns: 100% 100%;
+    grid-gap: 5px;
+    width: 50%;
+  `;
 
   return (
     <Fragment>
       <Header />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "100% 100%",
-          gridGap: 5,
-          width: "50%",
-        }}
-      >
+      <div className={gridClass}>
         {newData.map(
           (category: string | [], idx) =>
             typeof category === "string" && (
@@ -66,21 +86,12 @@ const Categories: React.FC<CategoriesProps> = () => {
         isOpen={isModalOpen}
         transition={ModalTransition.BOTTOM_UP}
         modalClassName={css({ backgroundColor: ranColor(), maxHeight: 50 })}
-        onBackdropClick={closeModal}
+        onBackdropClick={closeM}
       >
-        <button
-          style={{
-            position: "absolute",
-            right: 15,
-            top: 15,
-            color: "white",
-            backgroundColor: "red",
-          }}
-          onClick={closeModal}
-        >
+        <button className={closeButtonClass} onClick={closeM}>
           Close
         </button>
-        <Joke category={selectedCat} />
+        <Joke store={store} />
       </Modal>
     </Fragment>
   );

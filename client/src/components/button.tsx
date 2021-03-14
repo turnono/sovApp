@@ -1,7 +1,7 @@
 import styled from "react-emotion";
 import { lighten } from "polished";
 
-import { unit, colors } from "../styles";
+import { colors } from "../styles";
 
 const height = 50;
 export default styled("button")({

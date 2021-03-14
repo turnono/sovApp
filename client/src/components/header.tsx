@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "react-emotion";
 import { size } from "polished";
-import { unit, colors } from "../styles";
+import { unit } from "../styles";
 import chuck from "../assets/images/chucknorris1.png";
 
 interface HeaderProps {
@@ -40,8 +40,3 @@ const Image = styled("img")(size(134), (props: { round: boolean }) => ({
   marginRight: unit * 2.5,
   borderRadius: props.round ? "50%" : "0%",
 }));
-
-const Subheading = styled("h5")({
-  marginTop: unit / 2,
-  color: colors.textSecondary,
-});

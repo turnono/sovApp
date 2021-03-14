@@ -1,8 +1,9 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useMemo } from "react";
 import { gql, useQuery } from "@apollo/client";
 import { Loading } from "../components";
 import { RouteComponentProps } from "@reach/router";
 import * as JokeDetailsTypes from "./__generated__/JokeDetails";
+import { store } from "../store";
 
 export const GET_JOKE_DETAILS = gql`
   query JokeDetails($category: String!) {
@@ -13,18 +14,27 @@ export const GET_JOKE_DETAILS = gql`
 `;
 
 interface JokeProps extends RouteComponentProps {
-  category?: string;
+  store?: any;
 }
 
-const Joke: React.FC<JokeProps> = ({ category }) => {
+const Joke: React.FC<JokeProps> = ({ store }) => {
   const { data, loading, error } = useQuery<
     JokeDetailsTypes.JokeDetails,
     JokeDetailsTypes.JokeDetailsVariables
   >(GET_JOKE_DETAILS, {
-    variables: { category } as any,
+    variables: { category: store.getState().currentCategory },
     nextFetchPolicy: "no-cache",
     fetchPolicy: "no-cache",
   });
+
+  useMemo(
+    () =>
+      store.dispatch({
+        type: "SET_JOKE",
+        payload: data?.getRandomJokeByCategory?.value,
+      }),
+    [data]
+  );
 
   if (loading) return <Loading />;
   if (error) return <p>ERROR: {error.message}</p>;
@@ -32,8 +42,8 @@ const Joke: React.FC<JokeProps> = ({ category }) => {
 
   return (
     <Fragment>
-      <Header category={category} />
-      <h3>{data.getRandomJokeByCategory?.value}</h3>
+      <Header category={store.getState().currentCategory} />
+      <h3>{store.getState().joke}</h3>
     </Fragment>
   );
 };
