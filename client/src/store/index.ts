@@ -1,6 +1,12 @@
 import { createStore } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 
+export interface State {
+  categories: string[];
+  currentCategory: string;
+  joke: string;
+}
+
 const initialState = {
   categories: [""],
   currentCategory: undefined,

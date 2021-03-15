@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useMemo } from "react";
 import { RouteComponentProps } from "@reach/router";
 import { gql, useQuery } from "@apollo/client";
 import { Header, Button, Loading } from "../components";
@@ -7,7 +7,8 @@ import { css } from "react-emotion";
 import { Modal, ModalTransition, useModal } from "react-simple-hook-modal";
 import "react-simple-hook-modal/dist/styles.css";
 import Joke from "./joke";
-import { store } from "../store";
+import { State } from "../store";
+import { useDispatch, useSelector } from "react-redux";
 
 export const GET_CATEGORIES = gql`
   query GetCategoryList {
@@ -23,29 +24,32 @@ const Categories: React.FC<CategoriesProps> = () => {
     GetCategoryListTypes.GetCategoryList
   >(GET_CATEGORIES);
 
-  useMemo(() => store.dispatch({ type: "SET_CATEGORIES", payload: data }), [
-    data,
-  ]);
+  const dispatch = useDispatch();
+
+  useMemo(
+    () => dispatch({ type: "SET_CATEGORIES", payload: data?.categories }),
+    [data, dispatch]
+  );
+
+  const categories = useSelector<State, State["categories"]>(
+    (state) => state.categories
+  );
 
   if (loading) return <Loading />;
   if (error) return <p>ERROR</p>;
   if (!data) return <p>Not found</p>;
 
-  const newData: string[] | any[] = data.categories
-    ? Object.values(data.categories)
-    : [];
-
   const openM = (category: string) => {
-    store.dispatch({ type: "SET_CURRENT_CATEGORY", payload: category });
+    dispatch({ type: "SET_CURRENT_CATEGORY", payload: category });
     openModal();
   };
 
   const closeM = () => {
     closeModal();
     setTimeout(() => {
-      store.dispatch({ type: "REMOVE_CURRENT_CATEGORY" });
-      store.dispatch({ type: "REMOVE_JOKE" });
-    }, 50);
+      dispatch({ type: "REMOVE_CURRENT_CATEGORY" });
+      dispatch({ type: "REMOVE_JOKE" });
+    }, 200);
   };
 
   const closeButtonClass = css`
@@ -62,6 +66,8 @@ const Categories: React.FC<CategoriesProps> = () => {
     grid-gap: 5px;
     width: 50%;
   `;
+
+  const newData: string[] = categories[0] ? Object.values(categories[0]) : [];
 
   return (
     <Fragment>
@@ -91,7 +97,7 @@ const Categories: React.FC<CategoriesProps> = () => {
         <button className={closeButtonClass} onClick={closeM}>
           Close
         </button>
-        <Joke store={store} />
+        <Joke />
       </Modal>
     </Fragment>
   );
