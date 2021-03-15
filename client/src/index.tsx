@@ -12,7 +12,7 @@ const rootEl = document.querySelector("#root");
 
 const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({
   cache,
-  uri: "https://sovapp-chuck.herokuapp.com/graphql",
+  uri: "/graphql",
 });
 
 injectStyles();
